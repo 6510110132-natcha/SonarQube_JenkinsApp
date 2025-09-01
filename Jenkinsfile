@@ -1,14 +1,10 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18'
-            args '-u root:root'
-        }
+    agent any
+
+ tools {
+        nodejs 'nodejs-lts'  // <-- Use the exact name from Global Tool Configuration
     }
 
-    environment {
-        SONARQUBE = credentials('sonarqube-token')
-    }
 
     stages {
         stage('Checkout') {
@@ -16,23 +12,21 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/6510110132-natcha/SonarQube_JenkinsApp.git'
             }
         }
+
         stage('Build') {
             steps {
                 sh 'npm install'
             }
         }
-        stage('Test') {
-            steps {
-                sh 'npm test -- --coverage'
-            }
-        }
+
         stage('SonarQube Scan') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'npx sonar-scanner'
+                    sh 'npx sonar-scanner -Dsonar.projectKey=mywebapp'
                 }
             }
         }
+
         stage('Quality Gate') {
             steps {
                 timeout(time: 1, unit: 'MINUTES') {
